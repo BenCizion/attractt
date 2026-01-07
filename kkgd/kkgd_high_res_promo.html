@@ -3,37 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>꽃게당 인스타그램 TV - 4K UHD (3840x2160)</title>
+  <title>꽃게당 인스타그램 TV - 4K UHD (Split Playback)</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body, html {
-      width: 100vw;
-      height: 100vh;
+      width: 100vw; height: 100vh;
       background-color: #000;
       overflow: hidden;
       position: relative;
     }
 
-    #intro, #board {
+    #intro {
       position: absolute;
-      top: 0;
-      left: 0;
+      top: 0; left: 0;
       width: 100vw;
       height: calc(100vw * 9 / 16);
       max-height: 100vh;
-    }
-
-    #intro {
-      background: url('https://raw.githubusercontent.com/BenCizion/Att_self/main/꽃게당 배경 패턴(용량)_6.webp') center/cover no-repeat;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      background: url('https://bencizion.github.io/attractt/kkgd/files/꽃게당 배경 패턴(용량)_6.webp') center/cover no-repeat;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
       z-index: 10;
     }
 
@@ -48,21 +36,30 @@
       text-align: center;
       position: relative;
       z-index: 11;
+      display: none; /* 영상만 깔끔하게 보려면 숨김 */
     }
 
-    #videoPlayer {
+    /* 두 개의 비디오 플레이어를 겹쳐둠 */
+    .video-player {
       position: absolute;
-      top: 0;
-      left: 0;
+      top: 0; left: 0;
       width: 100% !important;
       height: 100% !important;
       background: #000;
       object-fit: cover;
+      opacity: 0; /* 기본적으로 숨김 */
+      transition: opacity 0.5s; /* 부드러운 전환 */
     }
 
-    /* 세로가 긴 화면일 때 */
+    /* 현재 활성화된 플레이어만 보임 */
+    .video-player.active {
+      opacity: 1;
+      z-index: 2;
+    }
+
+    /* 세로가 긴 화면일 때 비율 유지 */
     @media screen and (max-aspect-ratio: 16/9) {
-      #intro, #board {
+      #intro {
         width: calc(100vh * 16 / 9);
         height: 100vh;
         max-width: 100vw;
@@ -71,48 +68,84 @@
 
     /* 4K 네이티브 해상도 */
     @media screen and (min-width: 3840px) {
-      #intro, #board {
+      #intro {
         width: 3840px;
         height: 2160px;
         left: 50%;
         transform: translateX(-50%);
       }
-      h1 {
-        font-size: 32px;
-      }
-    }
-
-    /* 모바일 반응형 */
-    @media screen and (max-width: 768px) {
-      h1 {
-        font-size: 20px;
-        margin-bottom: 10px;
-        padding: 8px 16px;
-      }
     }
   </style>
 </head>
 <body>
-  <!-- 인트로 영역 -->
   <div id="intro">
-   <!-- <h1>Instagram #꽃게당 #KkotGeDang #シンサコッケタン</h1> -->
-    <video id="videoPlayer" autoplay muted loop playsinline preload="auto"></video>
+    <!-- 더블 버퍼링용 비디오 태그 2개 -->
+    <video id="player1" class="video-player active" muted playsinline preload="auto"></video>
+    <video id="player2" class="video-player" muted playsinline preload="auto"></video>
   </div>
 
   <script>
-    const videos = [
-      "https://bencizion.github.io/attractt/kkgd/files/2025_promo_review.mp4"
+    // [중요] 분할한 영상 파일들의 경로를 순서대로 적어주세요.
+    // 깃허브 25MB 제한 때문에 쪼갠 파일들입니다. (총 3개)
+    const videoSources = [
+      "https://raw.githubusercontent.com/BenCizion/attractt/main/kkgd/files/promo_highres_1of3.MP4",
+      "https://raw.githubusercontent.com/BenCizion/attractt/main/kkgd/files/promo_highres_2of3.MP4",
+      "https://raw.githubusercontent.com/BenCizion/attractt/main/kkgd/files/promo_highres_3of3.MP4"
     ];
 
-    const player = document.getElementById("videoPlayer");
+    let currentIdx = 0;
+    const player1 = document.getElementById('player1');
+    const player2 = document.getElementById('player2');
 
-    function playNext() {
-      player.src = videos[0];
-      player.play().catch(e => console.log('재생 오류:', e));
+    // 현재 재생 중인 플레이어와 대기 중인 플레이어를 추적
+    let currentPlayer = player1;
+    let nextPlayer = player2;
+
+    function init() {
+      if (videoSources.length === 0) return;
+
+      // 1. 첫 번째 영상 로드 및 재생
+      currentPlayer.src = videoSources[0];
+      currentPlayer.play().catch(e => console.log('재생 시작 실패(자동재생 정책 등):', e));
+
+      // 2. 두 번째 영상 미리 로드 (대기)
+      if (videoSources.length > 1) {
+        nextPlayer.src = videoSources[1];
+        nextPlayer.load();
+      }
+
+      // 이벤트 리스너 등록
+      player1.addEventListener('ended', onVideoEnded);
+      player2.addEventListener('ended', onVideoEnded);
     }
 
-    player.addEventListener("ended", playNext);
-    playNext(); // 첫 번째 재생
+    function onVideoEnded(e) {
+      // 방금 끝난 플레이어 (지금은 currentPlayer임)
+      const endedPlayer = e.target; 
+      
+      // 다음 인덱스 계산
+      currentIdx = (currentIdx + 1) % videoSources.length;
+      
+      // 1. 화면 전환 (Next 플레이어를 보여주고 재생)
+      nextPlayer.classList.add('active');
+      endedPlayer.classList.remove('active');
+      
+      nextPlayer.play().catch(e => console.log('이어보기 실패:', e));
+
+      // 2. 역할 교대 (Current <-> Next)
+      // 이제 nextPlayer가 현재 재생 중인 플레이어가 됨
+      const temp = currentPlayer;
+      currentPlayer = nextPlayer;
+      nextPlayer = temp;
+
+      // 3. 다다음 영상 미리 로드 (방금 끝난 플레이어에)
+      const nextNextIdx = (currentIdx + 1) % videoSources.length;
+      nextPlayer.src = videoSources[nextNextIdx];
+      nextPlayer.load();
+    }
+
+    // 시작
+    window.addEventListener('load', init);
   </script>
 </body>
 </html>
