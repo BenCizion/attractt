@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VAST version="4.0" xmlns="http://www.iab.com/VAST">
+  <Ad id="20001">
+    <InLine>
+      <AdSystem version="4.0">Attractt_Manual</AdSystem>
+      <AdTitle>Attractt Video Ad</AdTitle>
+      <Error><![CDATA[http://example.com/error]]></Error>
+      
+      <!-- [핵심 1] 트래킹 URL: 방금 만든 깃허브 파일 주소 -->
+      <!-- 뒤에 ?event=start가 붙어도 깃허브는 무시하고 200 OK를 줍니다 (성공) -->
+      <Impression>
+        <![CDATA[https://bencizion.github.io/attractt/kkgd/track.txt]]>
+      </Impression>
+      
+      <Creatives>
+        <Creative id="video1" sequence="1">
+          <Linear>
+            <Duration>00:00:10</Duration>
+            
+            <TrackingEvents>
+              <Tracking event="start">
+                <![CDATA[https://bencizion.github.io/attractt/kkgd/track.txt?event=start]]>
+              </Tracking>
+              <Tracking event="firstQuartile">
+                <![CDATA[https://bencizion.github.io/attractt/kkgd/track.txt?event=firstQuartile]]>
+              </Tracking>
+              <Tracking event="midpoint">
+                <![CDATA[https://bencizion.github.io/attractt/kkgd/track.txt?event=midpoint]]>
+              </Tracking>
+              <Tracking event="thirdQuartile">
+                <![CDATA[https://bencizion.github.io/attractt/kkgd/track.txt?event=thirdQuartile]]>
+              </Tracking>
+              <Tracking event="complete">
+                <![CDATA[https://bencizion.github.io/attractt/kkgd/track.txt?event=complete]]>
+              </Tracking>
+            </TrackingEvents>
+
+            <MediaFiles>
+              <!-- [핵심 2] 동영상 URL: 아까 확인된 S3 주소 -->
+              <MediaFile delivery="progressive" type="video/mp4" width="1280" height="750" scalable="true" maintainAspectRatio="true">
+                <![CDATA[https://attractt-data.s3.ap-northeast-2.amazonaws.com/attractt-upload-vast/vast-capture-3SwYxPrHIjtMpYA.mp4]]>
+              </MediaFile>
+            </MediaFiles>
+            
+            <VideoClicks>
+                <ClickThrough>
+                    <![CDATA[https://www.attractt.com]]>
+                </ClickThrough>
+            </VideoClicks>
+          </Linear>
+        </Creative>
+      </Creatives>
+    </InLine>
+  </Ad>
+</VAST>
